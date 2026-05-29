@@ -1,0 +1,10 @@
+node_modules
+dist
+*.local
+.DS_Store
+
+# BMAD framework install (not part of the game; reinstall via `npx bmad-method install`)
+_bmad
+.claude
+docs
+{output_folder}
