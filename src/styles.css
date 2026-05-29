@@ -94,6 +94,39 @@ html, body {
   font-weight: 700;
   color: var(--gold);
 }
+.strip--empty {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  color: var(--ink-dim);
+}
+.strip__row--async { opacity: 0.85; }
+.strip__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--good);
+}
+.strip__seen { font-size: 12px; color: var(--muted); }
+.strip__pulse {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--good);
+  box-shadow: 0 0 0 0 rgba(70, 211, 154, 0.7);
+  animation: pulse 1.6s infinite;
+  flex: none;
+}
+.strip__pulse--done { background: var(--gold); animation: none; box-shadow: none; }
+.strip__pulse--idle { background: var(--muted); animation: none; box-shadow: none; }
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(70, 211, 154, 0.6); }
+  70% { box-shadow: 0 0 0 7px rgba(70, 211, 154, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(70, 211, 154, 0); }
+}
 
 /* ---- Quartile gem slots (the hero) ---- */
 .gems { margin-bottom: 16px; }

@@ -5,6 +5,7 @@ import type { GameState } from "../engine/types";
 const STATE_PREFIX = "quartiles:state:";
 const NAME_KEY = "quartiles:name";
 const STREAK_KEY = "quartiles:streak";
+const PID_KEY = "quartiles:pid";
 
 function safeGet(key: string): string | null {
   try {
@@ -33,6 +34,19 @@ export function loadState(day: number): GameState | null {
 
 export function saveState(state: GameState): void {
   safeSet(STATE_PREFIX + state.day, JSON.stringify(state));
+}
+
+/** A stable id for this browser, so presence doesn't double-count you on reload. */
+export function playerId(): string {
+  let id = safeGet(PID_KEY);
+  if (!id) {
+    id =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `p_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+    safeSet(PID_KEY, id);
+  }
+  return id;
 }
 
 export function loadName(): string {

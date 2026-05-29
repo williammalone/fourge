@@ -9,8 +9,9 @@ interface ShareBarProps {
 
 export default function ShareBar({ result, streak, complete }: ShareBarProps) {
   const [copied, setCopied] = useState(false);
-  const url = buildShareUrl(result);
-  const text = buildShareText(result, streak, url);
+  const stamped = { ...result, t: Date.now() };
+  const url = buildShareUrl(stamped);
+  const text = buildShareText(stamped, streak, url);
 
   async function share() {
     const shareData = { title: "Fourge", text };

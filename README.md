@@ -51,9 +51,31 @@ the dictionary → accepts only boards with **exactly 5** quartiles (rejects any
 accidental 6th) and a fair spread of shorter words. A blocklist keeps slurs and
 crude words from being *featured* as quartile answers (they still score if found).
 
+## Live presence (optional)
+
+See when an invited friend is **playing right now** — a pulsing "playing now"
+indicator, their live quartile count, and a toast when they land a Fourge. It's
+built on **Supabase Realtime Presence** — an ephemeral channel, *no database,
+no tables, no migrations*. Only counts/score are broadcast, never the words.
+
+It's an enhancement layered on the async strip: when keys are configured and a
+friend is online you see them live; otherwise the strip gracefully shows their
+last shared result (or nothing). The app works fully without it.
+
+To enable:
+
+1. Create a free project at https://supabase.com
+2. Project Settings → API: copy the **Project URL** and the **anon/public key**
+3. Local dev: put them in `.env` (see `.env.example`)
+4. Deployed build: add both as GitHub Actions repository secrets
+   (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) — the deploy workflow injects
+   them at build time. Re-run the workflow and presence goes live.
+
+Caveats (by design): presence is best-effort (a closed tab lingers until the
+heartbeat times out), and the anon key is public in the client — fine for a
+play-with-friends game with no sensitive data.
+
 ## Roadmap (not built yet)
 
-- **Live presence** (P2): a Supabase backend (Postgres + Realtime + RLS) for a
-  pulsing "friend is playing now" strip and a spoiler-safe live race. The current
-  async link-sharing covers the core "we both play the same board" loop with no
-  infrastructure.
+- **Durable history / leaderboard** — would add Supabase Postgres tables + RLS
+  for persistent standings across days. Presence above is stateless; this isn't.

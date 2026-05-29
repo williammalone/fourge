@@ -17,7 +17,9 @@ import WordTray from "./components/WordTray";
 import QuartileSlots from "./components/QuartileSlots";
 import FoundWords from "./components/FoundWords";
 import ShareBar from "./components/ShareBar";
-import FriendStrip from "./components/FriendStrip";
+import CompanionStrip from "./components/CompanionStrip";
+import { usePresence } from "./lib/usePresence";
+import type { PresenceState } from "./lib/presence";
 
 type Phase = "loading" | "ready" | "error";
 
@@ -98,6 +100,21 @@ export default function App() {
     window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(null), 1600);
   }, []);
+
+  // ---- Live presence (no-op unless Supabase env keys are configured) -------
+  const presenceState: PresenceState = {
+    name,
+    quartilesFound: state?.quartilesFound ?? 0,
+    score: state?.score ?? 0,
+    wordsFound: state?.found.length ?? 0,
+    complete: state?.complete ?? false,
+  };
+  const { online: livePlayers, enabled: presenceEnabled } = usePresence({
+    day,
+    ready: phase === "ready",
+    state: presenceState,
+    onFriendFourge: (p) => flashToast(`${p.name || "A friend"} found a Fourge! 🟪`),
+  });
 
   // ---- Tile interactions ----------------------------------------------------
   const toggleTile = useCallback(
@@ -237,9 +254,13 @@ export default function App() {
         </div>
       </header>
 
-      {friend && (
-        <FriendStrip friend={friend} myQuartiles={state.quartilesFound} myScore={state.score} />
-      )}
+      <CompanionStrip
+        online={livePlayers}
+        presenceEnabled={presenceEnabled}
+        friend={friend}
+        myQuartiles={state.quartilesFound}
+        myScore={state.score}
+      />
 
       <QuartileSlots total={5} found={state.found} justFound={justFoundQuartile} />
 

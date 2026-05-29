@@ -15,6 +15,8 @@ export interface ShareResult {
   q: number;
   /** Total words found. */
   w: number;
+  /** Timestamp (epoch ms) when shared — for "played Xm ago". */
+  t?: number;
 }
 
 // ---- URL-safe base64 -------------------------------------------------------
