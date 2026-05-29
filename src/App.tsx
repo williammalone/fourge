@@ -227,6 +227,7 @@ export default function App() {
     <div className={`app ${boardFlash ? "app--flash" : ""}`}>
       <header className="header">
         <div className="header__title">
+          <img className="header__mark" src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width={34} height={34} />
           <h1>Fourge</h1>
           <span className="header__day">#{day}</span>
         </div>

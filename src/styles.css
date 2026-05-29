@@ -55,7 +55,8 @@ html, body {
   justify-content: space-between;
   margin-bottom: 14px;
 }
-.header__title { display: flex; align-items: baseline; gap: 8px; }
+.header__title { display: flex; align-items: center; gap: 9px; }
+.header__mark { border-radius: 8px; flex: none; }
 .header h1 {
   margin: 0;
   font-size: 26px;
