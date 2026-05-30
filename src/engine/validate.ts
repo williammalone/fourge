@@ -16,7 +16,10 @@ export function wordFromTiles(puzzle: Puzzle, tileIndices: number[]): string {
  *  - The concatenation must be a dictionary word.
  *  - A word already found cannot be scored again (counts once).
  *
- * Tiles are reusable across *different* words, so we never "consume" them.
+ * Tiles are reusable across *different* words, so we never "consume" them — a
+ * tile that helped form a Fourge still works in smaller words (e.g. the tiles in
+ * "motorbike" can also build "bike"). Finding a Fourge only *dims* its tiles as
+ * a visual cue; the dimming is handled in the UI, not here.
  */
 export function submit(
   puzzle: Puzzle,

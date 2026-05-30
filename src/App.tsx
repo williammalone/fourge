@@ -21,6 +21,8 @@ import FoundWords from "./components/FoundWords";
 import ShareBar from "./components/ShareBar";
 import CompanionStrip from "./components/CompanionStrip";
 import CoopGame from "./components/CoopGame";
+import FourgeWordmark from "./components/FourgeWordmark";
+import ThemeToggle from "./components/ThemeToggle";
 import { usePresence } from "./lib/usePresence";
 import type { PresenceState } from "./lib/presence";
 import { coopConfigured, newRoomId } from "./lib/coop";
@@ -115,9 +117,13 @@ export default function App() {
     () => new Set(state?.found.map((f) => f.word) ?? []),
     [state],
   );
+  // Tiles to dim: only those that helped form a completed Fourge. Smaller words
+  // never dim their tiles, and dimmed tiles stay fully usable for other words.
   const usedTiles = useMemo(() => {
     const s = new Set<number>();
-    state?.found.forEach((f) => f.tiles.forEach((t) => s.add(t)));
+    state?.found.forEach((f) => {
+      if (f.isQuartile) f.tiles.forEach((t) => s.add(t));
+    });
     return s;
   }, [state]);
 
@@ -146,6 +152,7 @@ export default function App() {
   const toggleTile = useCallback(
     (idx: number) => {
       if (!state || state.complete) return;
+      // Dimmed (Fourge) tiles stay selectable — they're reusable for other words.
       setSelection((sel) => {
         if (sel.includes(idx)) return sel.filter((i) => i !== idx);
         if (sel.length >= 4) return sel; // max 4 tiles per word
@@ -295,12 +302,15 @@ export default function App() {
       <header className="header">
         <div className="header__title">
           <img className="header__mark" src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width={34} height={34} />
-          <h1>Fourge</h1>
+          <FourgeWordmark />
           <span className="header__day">#{day}</span>
         </div>
-        <div className="header__score">
-          <span className="score">{state.score}</span>
-          <span className="score__label">pts{streak > 1 ? ` · \u{1F525}${streak}` : ""}</span>
+        <div className="header__right">
+          <div className="header__score">
+            <span className="score">{state.score}</span>
+            <span className="score__label">pts{streak > 1 ? ` · \u{1F525}${streak}` : ""}</span>
+          </div>
+          <ThemeToggle />
         </div>
       </header>
 
@@ -390,9 +400,9 @@ export default function App() {
           <summary>How to play</summary>
           <ul>
             <li>Tap up to <strong>4 tiles</strong> to build a word, then <strong>Enter</strong>.</li>
-            <li>1/2/3 tiles score 1/2/3 pts. A <strong>4-tile word is a Fourge — 8 pts</strong>.</li>
+            <li>1/2/3 tiles score 1/2/3 pts. A <strong>4-tile Fourge is 8 pts</strong>.</li>
             <li>Find all <strong>5 Fourges</strong> to solve. Tiles can be reused across words.</li>
-            <li>Every valid English word counts — explore freely.</li>
+            <li>Fourge tiles <strong>dim once found</strong> — but stay usable for smaller words (motorbike → bike).</li>
             <li>New puzzle every day. Same board for everyone.</li>
           </ul>
         </details>

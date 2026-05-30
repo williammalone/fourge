@@ -2,12 +2,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import type { Puzzle } from "../engine/types";
 import { submit as validateSubmit } from "../engine/validate";
+import { decomposePuzzle } from "../engine/decompose";
 import { puzzleForDay } from "../lib/daily";
 import { playerId, loadName, saveName } from "../lib/storage";
 import { useCoop } from "../lib/useCoop";
 import { playerColor, playerInitial } from "../lib/colors";
 import Grid from "./Grid";
 import WordTray from "./WordTray";
+import FourgeWordmark from "./FourgeWordmark";
+import ThemeToggle from "./ThemeToggle";
 
 interface CoopGameProps {
   puzzles: Puzzle[];
@@ -15,8 +18,6 @@ interface CoopGameProps {
   roomId: string;
   todayDay: number;
 }
-
-const EMPTY = new Set<number>();
 
 export default function CoopGame({ puzzles, dict, roomId, todayDay }: CoopGameProps) {
   const selfId = playerId();
@@ -57,9 +58,23 @@ export default function CoopGame({ puzzles, dict, roomId, todayDay }: CoopGamePr
   const quartiles = coop.found.filter((f) => f.isQuartile);
   const complete = quartiles.length >= 5;
 
+  // Tiles to dim: only those that helped form a found Fourge. Co-op syncs Fourge
+  // words but not tile indices, so recover each Fourge's tiles from a clean
+  // partition of the board. Dimmed tiles stay usable (motorbike → bike).
+  const usedTiles = useMemo(() => {
+    const s = new Set<number>();
+    const decomp = puzzle ? decomposePuzzle(puzzle) : null;
+    if (decomp) {
+      for (const f of coop.found) {
+        if (f.isQuartile) decomp.get(f.word)?.forEach((i) => s.add(i));
+      }
+    }
+    return s;
+  }, [puzzle, coop.found]);
+
   const toggleTile = useCallback(
     (idx: number) => {
-      if (complete) return;
+      if (complete) return; // dimmed Fourge tiles remain selectable
       setSelection((sel) => {
         if (sel.includes(idx)) return sel.filter((i) => i !== idx);
         if (sel.length >= 4) return sel;
@@ -176,12 +191,15 @@ export default function CoopGame({ puzzles, dict, roomId, todayDay }: CoopGamePr
       <header className="header">
         <div className="header__title">
           <img className="header__mark" src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width={34} height={34} />
-          <h1>Fourge</h1>
+          <FourgeWordmark />
           <span className="header__day header__day--coop">co-op #{coop.day}</span>
         </div>
-        <div className="header__score">
-          <span className="score">{score}</span>
-          <span className="score__label">team pts</span>
+        <div className="header__right">
+          <div className="header__score">
+            <span className="score">{score}</span>
+            <span className="score__label">team pts</span>
+          </div>
+          <ThemeToggle />
         </div>
       </header>
 
@@ -223,7 +241,7 @@ export default function CoopGame({ puzzles, dict, roomId, todayDay }: CoopGamePr
       </div>
 
       <main className="board">
-        <Grid tiles={puzzle.tiles} order={order} selection={selection} usedTiles={EMPTY} onTileClick={toggleTile} />
+        <Grid tiles={puzzle.tiles} order={order} selection={selection} usedTiles={usedTiles} onTileClick={toggleTile} />
         <WordTray
           tiles={puzzle.tiles}
           selection={selection}
@@ -291,6 +309,7 @@ export default function CoopGame({ puzzles, dict, roomId, todayDay }: CoopGamePr
           <summary>How co-op works</summary>
           <ul>
             <li>One <strong>shared board</strong> — words either of you find count for the team.</li>
+            <li>A found Fourge <strong>dims its four tiles</strong> for both of you — they still work in smaller words.</li>
             <li>Progress is <strong>saved</strong>: play across the day, refresh, come back — it's all here.</li>
             <li>Finish by finding all <strong>5 Fourges together</strong>.</li>
             <li>Tap <strong>Invite</strong> to bring in your teammate.</li>

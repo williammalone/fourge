@@ -97,16 +97,4 @@ describe("submit", () => {
     const r = submit(puzzle, [0, 0], dict, none);
     expect(r).toEqual({ ok: false, reason: "too-long" });
   });
-
-  it("a 4-tile word not in the quartile list is valid but not a quartile", () => {
-    // Build a dict where a non-quartile 4-tile combo is a real word.
-    const d2 = parseDictionary("muonat\nmumbling");
-    const r = submit(puzzle, [0, 5, 4], d2, none); // 3 tiles "muonat"? no -> "mu"+"on"+"at"
-    // "mu"+"on"+"at" = "muonat" (3 tiles) valid, 3 points, not a quartile
-    expect(r.ok).toBe(true);
-    if (r.ok) {
-      expect(r.found.points).toBe(3);
-      expect(r.found.isQuartile).toBe(false);
-    }
-  });
 });

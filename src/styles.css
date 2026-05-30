@@ -1,21 +1,62 @@
 :root {
-  --bg: #0f1226;
-  --bg-2: #171a36;
-  --panel: #1e2244;
-  --panel-2: #262b54;
-  --ink: #eef0ff;
-  --ink-dim: #a6abda;
-  --muted: #6f76ab;
-  --accent: #7c5cff;
-  --accent-2: #5b8cff;
-  --gold: #ffcd4d;
-  --gold-deep: #f5a623;
-  --good: #46d39a;
-  --bad: #ff6b6b;
-  --tile: #2a2f5e;
-  --tile-sel: linear-gradient(160deg, #7c5cff, #5b8cff);
+  /* Editorial light — warm paper, near-black ink, ONE green accent, gold for
+     the Fourge reward only. No gradients; flat, confident color. */
+  --bg: #f7f3e9;          /* warm paper */
+  --bg-2: #fffdf7;        /* cards, inputs, tile faces */
+  --panel: #efe8d6;       /* raised panels / chips */
+  --panel-2: #e8e0cc;
+  --ink: #1b1b1a;         /* near-black text */
+  --ink-dim: #5c574c;     /* secondary text */
+  --muted: #8a8472;       /* tertiary text */
+  --line: rgba(27, 27, 26, 0.12);        /* hairline on light */
+  --line-strong: rgba(27, 27, 26, 0.22);
+  --accent: #18794e;      /* forest green — the one interactive color */
+  --accent-2: #18794e;    /* (kept for legacy refs; same green) */
+  --gold: #e0a92b;        /* Fourge reward */
+  --gold-deep: #c98a12;
+  --good: #18794e;        /* "good" folds into the accent green */
+  --bad: #c0392b;
+  --tile: #fffdf7;        /* bright cream tile face */
+  --tile-border: #e4ddca;
+  --tile-banked: #efeadb; /* a spent ("banked") tile */
+  --tile-sel: #18794e;    /* flat green (was a gradient) */
+  --banner-bg: #fbf0d6;   /* solved / reward banner */
+  --banner-border: rgba(224, 169, 43, 0.5);
+  --callout-bg: #eaf3ec;  /* challenge / coop callouts */
+  --callout-border: rgba(24, 121, 78, 0.35);
+  --bg-glow: #fffaf0;     /* subtle warmth at the top of the page */
   --radius: 14px;
-  --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow: 0 6px 18px rgba(27, 27, 26, 0.10);
+}
+
+/* Dark mode — warm near-black (deliberately NOT indigo), same green+gold brand.
+   Applied by the theme toggle / system-preference script via [data-theme]. */
+:root[data-theme="dark"] {
+  --bg: #14120e;
+  --bg-2: #1d1914;
+  --panel: #221d17;
+  --panel-2: #2a241d;
+  --ink: #f3efe6;
+  --ink-dim: #b6ad9c;
+  --muted: #847c6c;
+  --line: rgba(255, 255, 255, 0.10);
+  --line-strong: rgba(255, 255, 255, 0.18);
+  --accent: #43b277;      /* green brightened for legibility on dark */
+  --accent-2: #43b277;
+  --gold: #e9b949;
+  --gold-deep: #d3a02a;
+  --good: #43b277;
+  --bad: #e0685c;
+  --tile: #241f18;
+  --tile-border: rgba(255, 255, 255, 0.08);
+  --tile-banked: #1b1712;
+  --tile-sel: #43b277;
+  --banner-bg: rgba(233, 185, 73, 0.12);
+  --banner-border: rgba(233, 185, 73, 0.4);
+  --callout-bg: rgba(67, 178, 119, 0.13);
+  --callout-border: rgba(67, 178, 119, 0.4);
+  --bg-glow: #20190f;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
 * { box-sizing: border-box; }
@@ -23,8 +64,9 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: radial-gradient(1200px 800px at 50% -10%, #20264f 0%, var(--bg) 55%);
+  background: radial-gradient(1200px 800px at 50% -10%, var(--bg-glow) 0%, var(--bg) 60%);
   color: var(--ink);
+  transition: background-color 0.25s ease, color 0.25s ease;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -44,7 +86,7 @@ html, body {
 .app--flash { animation: boardflash 0.9s ease; }
 @keyframes boardflash {
   0% { background: transparent; }
-  25% { background: radial-gradient(700px 400px at 50% 30%, rgba(255, 205, 77, 0.18), transparent 70%); }
+  25% { background: radial-gradient(700px 400px at 50% 30%, rgba(224, 169, 43, 0.22), transparent 70%); }
   100% { background: transparent; }
 }
 
@@ -57,24 +99,51 @@ html, body {
 }
 .header__title { display: flex; align-items: center; gap: 9px; }
 .header__mark { border-radius: 8px; flex: none; }
-.header h1 {
+.header h1 { margin: 0; font-size: 26px; }
+/* Handwriting wordmark — give it room so the 'g' descender never clips. */
+.wordmark {
   margin: 0;
-  font-size: 26px;
+  line-height: 1.05;
+  display: inline-flex;
+  align-items: center;
+  overflow: visible;
+}
+.wordmark :where(svg) { overflow: visible; display: block; }
+.wordmark__fallback {
+  font-weight: 800;
   letter-spacing: 0.5px;
-  background: linear-gradient(120deg, var(--gold), #ffe49b);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  line-height: 1.18;
+  padding-bottom: 0.1em; /* room for descenders under background-clip:text */
+  color: var(--gold-deep);
 }
 .header__day { color: var(--muted); font-weight: 700; font-size: 14px; }
+.header__right { display: flex; align-items: center; gap: 10px; }
 .header__score { text-align: right; }
+.theme-toggle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink-dim);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.theme-toggle:hover { color: var(--ink); }
+.theme-toggle:active { transform: translateY(1px); }
 .score { font-size: 28px; font-weight: 800; color: var(--ink); }
 .score__label { display: block; font-size: 12px; color: var(--ink-dim); margin-top: -2px; }
 
 /* ---- Friend strip ---- */
 .strip {
-  background: linear-gradient(160deg, var(--panel), var(--panel-2));
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--panel);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 12px 14px;
   margin-bottom: 14px;
@@ -83,8 +152,8 @@ html, body {
 .strip__row { display: flex; align-items: center; gap: 10px; padding: 3px 0; }
 .strip__row--you { color: var(--ink); }
 .strip__name { width: 64px; font-weight: 700; font-size: 13px; color: var(--ink-dim); }
-.strip__row--you .strip__name { color: var(--accent-2); }
-.strip__gems { letter-spacing: 2px; color: var(--gold); font-size: 14px; }
+.strip__row--you .strip__name { color: var(--accent); }
+.strip__gems { letter-spacing: 2px; color: var(--gold-deep); font-size: 14px; }
 .strip__gems-empty { color: var(--muted); }
 .strip__stat { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--ink-dim); font-size: 13px; }
 .strip__verdict {
@@ -92,7 +161,7 @@ html, body {
   text-align: center;
   font-size: 13px;
   font-weight: 700;
-  color: var(--gold);
+  color: var(--gold-deep);
 }
 .strip--empty {
   display: flex;
@@ -116,16 +185,16 @@ html, body {
   height: 9px;
   border-radius: 50%;
   background: var(--good);
-  box-shadow: 0 0 0 0 rgba(70, 211, 154, 0.7);
+  box-shadow: 0 0 0 0 rgba(24, 121, 78, 0.7);
   animation: pulse 1.6s infinite;
   flex: none;
 }
 .strip__pulse--done { background: var(--gold); animation: none; box-shadow: none; }
 .strip__pulse--idle { background: var(--muted); animation: none; box-shadow: none; }
 @keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(70, 211, 154, 0.6); }
-  70% { box-shadow: 0 0 0 7px rgba(70, 211, 154, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(70, 211, 154, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(24, 121, 78, 0.6); }
+  70% { box-shadow: 0 0 0 7px rgba(24, 121, 78, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(24, 121, 78, 0); }
 }
 
 /* ---- Quartile gem slots (the hero) ---- */
@@ -140,7 +209,7 @@ html, body {
   align-items: center;
   gap: 8px;
 }
-.gems__count { color: var(--gold); font-weight: 800; }
+.gems__count { color: var(--gold-deep); font-weight: 800; }
 .gems__row {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -154,15 +223,15 @@ html, body {
   justify-content: center;
   text-align: center;
   padding: 2px;
-  border: 1.5px dashed rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.02);
+  border: 1.5px dashed var(--line-strong);
+  background: rgba(27, 27, 26, 0.02);
   overflow: hidden;
 }
 .gem--empty .gem__dot { color: var(--muted); font-size: 16px; }
 .gem--filled {
   border: 1.5px solid transparent;
-  background: linear-gradient(160deg, var(--gold), var(--gold-deep));
-  box-shadow: 0 6px 16px rgba(245, 166, 35, 0.35);
+  background: var(--gold);
+  box-shadow: 0 4px 12px rgba(224, 169, 43, 0.30);
 }
 .gem__word {
   font-size: 10px;
@@ -189,7 +258,7 @@ html, body {
 }
 .tile {
   aspect-ratio: 1.35 / 1;
-  border: none;
+  border: 1px solid var(--tile-border);
   border-radius: 12px;
   background: var(--tile);
   color: var(--ink);
@@ -198,8 +267,8 @@ html, body {
   letter-spacing: 0.5px;
   cursor: pointer;
   position: relative;
-  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.12s ease;
+  box-shadow: 0 2px 0 var(--tile-border);
+  transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.12s ease, color 0.12s ease;
   text-transform: uppercase;
   display: flex;
   align-items: center;
@@ -209,17 +278,25 @@ html, body {
 .tile:active { transform: translateY(1px); }
 .tile--selected {
   background: var(--tile-sel);
+  border-color: var(--tile-sel);
+  color: #fff;
   transform: translateY(-3px) scale(1.04);
-  box-shadow: 0 10px 22px rgba(124, 92, 255, 0.5);
+  box-shadow: 0 8px 16px rgba(24, 121, 78, 0.28);
 }
-/* Used tiles stay full-brightness (they're reusable) — just a subtle dot cue. */
+/* Dimmed tiles — helped form a found Fourge. A visual cue only: still tappable
+   and fully reusable for smaller words (e.g. motorbike's tiles still build bike). */
+.tile--used {
+  background: var(--tile-banked);
+  color: var(--ink-dim);
+  box-shadow: none;
+}
 .tile--used::after {
   content: "";
   position: absolute;
-  top: 5px; right: 5px;
+  top: 5px; right: 6px;
   width: 5px; height: 5px;
   border-radius: 50%;
-  background: var(--good);
+  background: var(--accent);
   opacity: 0.7;
 }
 .tile__order {
@@ -227,7 +304,7 @@ html, body {
   top: 4px; left: 6px;
   font-size: 10px;
   font-weight: 800;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* ---- Tray ---- */
@@ -236,7 +313,7 @@ html, body {
   min-height: 56px;
   border-radius: var(--radius);
   background: var(--bg-2);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--line);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -251,7 +328,7 @@ html, body {
   30%, 50%, 70% { transform: translateX(-7px); }
   40%, 60% { transform: translateX(7px); }
 }
-.tray__hint { color: var(--muted); font-size: 14px; }
+.tray__hint { color: var(--ink-dim); font-size: 14px; }
 .tray__frag {
   background: var(--accent);
   color: #fff;
@@ -262,7 +339,7 @@ html, body {
   font-size: 16px;
   text-transform: uppercase;
   cursor: pointer;
-  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 0 rgba(13, 59, 39, 0.35);
 }
 .tray__actions {
   display: flex;
@@ -281,12 +358,12 @@ html, body {
 }
 .btn:active { transform: translateY(1px); }
 .btn:disabled { opacity: 0.4; cursor: default; }
-.btn--ghost { background: var(--panel); color: var(--ink-dim); }
-.btn--primary { background: linear-gradient(160deg, var(--accent), var(--accent-2)); color: #fff; flex: 1.4; }
+.btn--ghost { background: var(--panel); color: var(--ink-dim); border: 1px solid var(--line); }
+.btn--primary { background: var(--accent); color: #fff; flex: 1.4; }
 .btn--share {
   width: 100%;
-  background: linear-gradient(160deg, var(--good), #2fb98a);
-  color: #04261c;
+  background: var(--ink);
+  color: var(--bg);
 }
 
 /* ---- Toast ---- */
@@ -295,9 +372,9 @@ html, body {
   left: 50%;
   bottom: 26px;
   transform: translateX(-50%);
-  background: rgba(20, 23, 48, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: var(--ink);
+  background: var(--ink);
+  border: 1px solid rgba(27, 27, 26, 0.2);
+  color: var(--bg);
   padding: 10px 18px;
   border-radius: 999px;
   font-weight: 800;
@@ -313,8 +390,8 @@ html, body {
 /* ---- Banner ---- */
 .banner {
   text-align: center;
-  background: linear-gradient(160deg, rgba(255, 205, 77, 0.16), rgba(124, 92, 255, 0.16));
-  border: 1px solid rgba(255, 205, 77, 0.3);
+  background: var(--banner-bg);
+  border: 1px solid var(--banner-border);
   border-radius: var(--radius);
   padding: 14px;
   margin: 14px 0;
@@ -327,8 +404,8 @@ html, body {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: linear-gradient(160deg, rgba(124, 92, 255, 0.22), rgba(91, 140, 255, 0.14));
-  border: 1px solid rgba(124, 92, 255, 0.45);
+  background: var(--callout-bg);
+  border: 1px solid var(--callout-border);
   border-radius: var(--radius);
   padding: 11px 14px;
   margin: 4px 0 12px;
@@ -337,8 +414,8 @@ html, body {
 }
 .challenge__spark { font-size: 18px; line-height: 1; }
 .challenge__text { line-height: 1.35; }
-.challenge__text strong { color: var(--accent-2); }
-.challenge__target { color: var(--gold); font-weight: 700; white-space: nowrap; }
+.challenge__text strong { color: var(--accent); }
+.challenge__target { color: var(--gold-deep); font-weight: 700; white-space: nowrap; }
 
 /* ---- First-time intro (cuts cold-arrival bounce) ---- */
 .intro {
@@ -406,7 +483,7 @@ html, body {
 .name-row label { font-size: 12px; color: var(--ink-dim); }
 .name-row input {
   background: var(--bg-2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--line);
   border-radius: 10px;
   padding: 11px 12px;
   color: var(--ink);
@@ -420,10 +497,10 @@ html, body {
   background: var(--bg-2);
   border-radius: var(--radius);
   padding: 12px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line);
 }
 .found__head { font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--ink-dim); margin-bottom: 8px; }
-.found__count { color: var(--accent-2); font-weight: 800; }
+.found__count { color: var(--accent); font-weight: 800; }
 .found__empty { color: var(--muted); font-size: 14px; margin: 4px 0; }
 .found__list {
   list-style: none;
@@ -441,7 +518,7 @@ html, body {
   padding: 6px 10px;
   font-size: 14px;
 }
-.found__pts { color: var(--good); font-weight: 800; }
+.found__pts { color: var(--accent); font-weight: 800; }
 
 /* ---- Footer / how to play ---- */
 .footer { margin-top: 18px; color: var(--ink-dim); }
@@ -462,7 +539,7 @@ html, body {
 .loader__spin {
   width: 38px; height: 38px;
   margin: 0 auto 12px;
-  border: 4px solid rgba(255, 255, 255, 0.12);
+  border: 4px solid var(--line);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -470,12 +547,13 @@ html, body {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ---- Co-op ---- */
-.header__day--coop { color: var(--good); }
+.header__day--coop { color: var(--accent); }
 .btn--coop {
   width: 100%;
   margin-top: 10px;
-  background: linear-gradient(160deg, #ff9a4d, #ff6b9c);
-  color: #2a0d14;
+  background: transparent;
+  border: 2px solid var(--accent);
+  color: var(--accent);
 }
 .team {
   display: flex;
@@ -489,7 +567,7 @@ html, body {
   align-items: center;
   gap: 6px;
   background: var(--panel);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--line);
   border-radius: 999px;
   padding: 5px 11px 5px 8px;
   font-size: 13px;
@@ -503,7 +581,7 @@ html, body {
   box-shadow: 0 0 8px var(--pc, var(--accent));
 }
 .team__invite {
-  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border: 1px dashed var(--line-strong);
   background: transparent;
   color: var(--ink-dim);
   border-radius: 999px;
@@ -514,13 +592,13 @@ html, body {
 }
 .gems__sub { color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
 .gem--coop {
-  background: linear-gradient(160deg, var(--pc, var(--gold)), color-mix(in srgb, var(--pc, var(--gold)) 70%, #000));
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--pc, var(--gold)) 45%, transparent);
+  background: var(--pc, var(--gold));
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--pc, var(--gold)) 35%, transparent);
 }
 .gem--coop .gem__word { color: #1a1206; }
 .banner--coop {
-  background: linear-gradient(160deg, rgba(255, 154, 77, 0.18), rgba(255, 107, 156, 0.18));
-  border-color: rgba(255, 154, 77, 0.4);
+  background: var(--callout-bg);
+  border-color: var(--callout-border);
 }
 .found__finder {
   width: 18px;
@@ -531,7 +609,7 @@ html, body {
   justify-content: center;
   font-size: 10px;
   font-weight: 800;
-  color: #1a1206;
+  color: #1a1206; /* player palette is light — dark initial reads better */
   flex: none;
   margin-right: 7px;
 }

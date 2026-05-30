@@ -3,7 +3,7 @@ interface TileProps {
   index: number;
   selected: boolean;
   order: number | null; // 1-based position in the current selection, or null
-  used: boolean; // has contributed to at least one found word
+  used: boolean; // dimmed: helped form a found Fourge (still reusable)
   onClick: (index: number) => void;
 }
 
@@ -17,7 +17,7 @@ export default function Tile({ text, index, selected, order, used, onClick }: Ti
       className={cls.join(" ")}
       onClick={() => onClick(index)}
       aria-pressed={selected}
-      aria-label={`tile ${text}`}
+      aria-label={`tile ${text}${used && !selected ? " (in a Fourge)" : ""}`}
     >
       <span className="tile__text">{text}</span>
       {order != null && <span className="tile__order">{order}</span>}
