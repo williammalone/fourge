@@ -25,6 +25,10 @@ import { usePresence } from "./lib/usePresence";
 import type { PresenceState } from "./lib/presence";
 import { coopConfigured, newRoomId } from "./lib/coop";
 
+// Optional "support / tip" link. Set this to your Ko-fi or Buy Me a Coffee URL
+// (e.g. "https://ko-fi.com/yourname") to show a Support button. Empty = hidden.
+const SUPPORT_URL = "";
+
 /** Read the co-op room id from the URL, if any. */
 function coopRoomFromUrl(): string | null {
   try {
@@ -392,6 +396,14 @@ export default function App() {
             <li>New puzzle every day. Same board for everyone.</li>
           </ul>
         </details>
+        <nav className="footer__nav">
+          <a href={`${import.meta.env.BASE_URL}archive/`}>Past puzzles →</a>
+          {SUPPORT_URL && (
+            <a href={SUPPORT_URL} target="_blank" rel="noopener noreferrer">
+              ♥ Support Fourge
+            </a>
+          )}
+        </nav>
       </footer>
     </div>
   );
