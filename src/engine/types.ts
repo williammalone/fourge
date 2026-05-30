@@ -21,6 +21,10 @@ export interface FoundWord {
   points: number;
   /** True if this is one of the 5 hidden quartiles. */
   isQuartile: boolean;
+  /** Co-op only: stable id of the player who found it. */
+  finderId?: string;
+  /** Co-op only: display name of the finder. */
+  finderName?: string;
 }
 
 /** Persisted per-day game state. */

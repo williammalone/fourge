@@ -18,14 +18,27 @@ import QuartileSlots from "./components/QuartileSlots";
 import FoundWords from "./components/FoundWords";
 import ShareBar from "./components/ShareBar";
 import CompanionStrip from "./components/CompanionStrip";
+import CoopGame from "./components/CoopGame";
 import { usePresence } from "./lib/usePresence";
 import type { PresenceState } from "./lib/presence";
+import { coopConfigured, newRoomId } from "./lib/coop";
+
+/** Read the co-op room id from the URL, if any. */
+function coopRoomFromUrl(): string | null {
+  try {
+    return new URLSearchParams(window.location.search).get("coop");
+  } catch {
+    return null;
+  }
+}
 
 type Phase = "loading" | "ready" | "error";
 
 export default function App() {
+  const coopRoom = coopRoomFromUrl();
   const [phase, setPhase] = useState<Phase>("loading");
   const [dict, setDict] = useState<Set<string> | null>(null);
+  const [puzzles, setPuzzles] = useState<Puzzle[] | null>(null);
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [day, setDay] = useState(0);
   const [friend, setFriend] = useState<ShareResult | null>(null);
@@ -68,6 +81,7 @@ export default function App() {
             name: loadName() || undefined,
           };
         setDict(d);
+        setPuzzles(puzzles);
         setPuzzle(p);
         setDay(resolvedDay);
         setFriend(fromUrl.friend);
@@ -111,7 +125,7 @@ export default function App() {
   };
   const { online: livePlayers, enabled: presenceEnabled } = usePresence({
     day,
-    ready: phase === "ready",
+    ready: phase === "ready" && !coopRoom, // co-op manages its own room presence
     state: presenceState,
     onFriendFourge: (p) => flashToast(`${p.name || "A friend"} found a Fourge! 🟪`),
   });
@@ -214,6 +228,10 @@ export default function App() {
   }
 
   // ---- Render ---------------------------------------------------------------
+  // Co-op mode: a shared room link takes over with its own screen.
+  if (coopRoom && phase === "ready" && puzzles && dict) {
+    return <CoopGame puzzles={puzzles} dict={dict} roomId={coopRoom} todayDay={dayNumber()} />;
+  }
   if (phase === "loading") {
     return (
       <div className="app app--center">
@@ -308,6 +326,19 @@ export default function App() {
       </div>
 
       <ShareBar result={shareResult} streak={streak} complete={state.complete} />
+
+      {coopConfigured && (
+        <button
+          type="button"
+          className="btn btn--coop"
+          onClick={() => {
+            const id = newRoomId();
+            window.location.href = `${window.location.pathname}?coop=${id}&d=${dayNumber()}`;
+          }}
+        >
+          🤝 Play together (co-op)
+        </button>
+      )}
 
       <FoundWords found={state.found} />
 

@@ -386,6 +386,74 @@ html, body {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ---- Co-op ---- */
+.header__day--coop { color: var(--good); }
+.btn--coop {
+  width: 100%;
+  margin-top: 10px;
+  background: linear-gradient(160deg, #ff9a4d, #ff6b9c);
+  color: #2a0d14;
+}
+.team {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+.team__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 5px 11px 5px 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.team__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--pc, var(--accent));
+  box-shadow: 0 0 8px var(--pc, var(--accent));
+}
+.team__invite {
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: var(--ink-dim);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.gems__sub { color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
+.gem--coop {
+  background: linear-gradient(160deg, var(--pc, var(--gold)), color-mix(in srgb, var(--pc, var(--gold)) 70%, #000));
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--pc, var(--gold)) 45%, transparent);
+}
+.gem--coop .gem__word { color: #1a1206; }
+.banner--coop {
+  background: linear-gradient(160deg, rgba(255, 154, 77, 0.18), rgba(255, 107, 156, 0.18));
+  border-color: rgba(255, 154, 77, 0.4);
+}
+.found__finder {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: #1a1206;
+  flex: none;
+  margin-right: 7px;
+}
+.found__item { align-items: center; }
+
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
