@@ -6,6 +6,7 @@ const STATE_PREFIX = "quartiles:state:";
 const NAME_KEY = "quartiles:name";
 const STREAK_KEY = "quartiles:streak";
 const PID_KEY = "quartiles:pid";
+const INTRO_KEY = "quartiles:intro";
 
 function safeGet(key: string): string | null {
   try {
@@ -47,6 +48,14 @@ export function playerId(): string {
     safeSet(PID_KEY, id);
   }
   return id;
+}
+
+/** Whether this browser has seen the first-time intro. */
+export function introSeen(): boolean {
+  return safeGet(INTRO_KEY) === "1";
+}
+export function markIntroSeen(): void {
+  safeSet(INTRO_KEY, "1");
 }
 
 export function loadName(): string {

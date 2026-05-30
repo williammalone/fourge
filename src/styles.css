@@ -340,6 +340,62 @@ html, body {
 .challenge__text strong { color: var(--accent-2); }
 .challenge__target { color: var(--gold); font-weight: 700; white-space: nowrap; }
 
+/* ---- First-time intro (cuts cold-arrival bounce) ---- */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(7, 9, 22, 0.72);
+  backdrop-filter: blur(4px);
+  animation: introfade 0.25s ease;
+}
+@keyframes introfade { from { opacity: 0; } to { opacity: 1; } }
+.intro__card {
+  width: 100%;
+  max-width: 380px;
+  background: linear-gradient(160deg, var(--panel), var(--panel-2));
+  border: 1px solid rgba(124, 92, 255, 0.4);
+  border-radius: 18px;
+  padding: 22px 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  animation: intropop 0.3s cubic-bezier(0.2, 1.1, 0.3, 1);
+}
+@keyframes intropop {
+  from { transform: translateY(12px) scale(0.97); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+.intro__logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+.intro__logo span {
+  background: linear-gradient(120deg, var(--gold), #ffe49b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.intro__lead { margin: 0 0 14px; color: var(--ink); font-size: 15px; }
+.intro__steps {
+  margin: 0 0 18px;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--ink-dim);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.intro__steps strong { color: var(--ink); }
+.intro__go { width: 100%; }
+
 /* ---- Name + share ---- */
 .name-row {
   display: flex;

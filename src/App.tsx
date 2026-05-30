@@ -11,6 +11,8 @@ import {
   saveName,
   loadStreak,
   recordCompletion,
+  introSeen,
+  markIntroSeen,
 } from "./lib/storage";
 import Grid from "./components/Grid";
 import WordTray from "./components/WordTray";
@@ -52,8 +54,14 @@ export default function App() {
   const [name, setName] = useState<string>(loadName());
   const [streak, setStreak] = useState(loadStreak().count);
   const [boardFlash, setBoardFlash] = useState(false);
+  const [showIntro, setShowIntro] = useState(() => !introSeen());
 
   const toastTimer = useRef<number | undefined>(undefined);
+
+  const dismissIntro = useCallback(() => {
+    markIntroSeen();
+    setShowIntro(false);
+  }, []);
 
   // ---- Load assets + resolve today's puzzle --------------------------------
   useEffect(() => {
@@ -260,6 +268,26 @@ export default function App() {
 
   return (
     <div className={`app ${boardFlash ? "app--flash" : ""}`}>
+      {showIntro && (
+        <div className="intro" role="dialog" aria-modal="true" aria-label="How to play Fourge" onClick={dismissIntro}>
+          <div className="intro__card" onClick={(e) => e.stopPropagation()}>
+            <div className="intro__logo">
+              <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width={40} height={40} />
+              <span>Fourge</span>
+            </div>
+            <p className="intro__lead">A daily word puzzle. Combine fragment tiles into words.</p>
+            <ul className="intro__steps">
+              <li><strong>Tap up to 4 tiles</strong> to build a word, then <strong>Enter</strong>.</li>
+              <li>A <strong>4-tile word is a Fourge</strong> — 8 pts. Each board hides <strong>5</strong>.</li>
+              <li>Tiles are <strong>reusable</strong>. Every valid English word scores.</li>
+              <li>Same board for everyone, every day. <strong>Challenge a friend.</strong></li>
+            </ul>
+            <button type="button" className="btn btn--share intro__go" onClick={dismissIntro}>
+              {friend ? "Take the challenge \u{2694}\u{FE0F}" : "Play today's Fourge \u{1F7EA}"}
+            </button>
+          </div>
+        </div>
+      )}
       <header className="header">
         <div className="header__title">
           <img className="header__mark" src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width={34} height={34} />
