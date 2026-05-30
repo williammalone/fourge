@@ -272,6 +272,17 @@ export default function App() {
         </div>
       </header>
 
+      {friend && !state.complete && state.found.length === 0 && (
+        <div className="challenge" role="status">
+          <span className="challenge__spark" aria-hidden>⚔️</span>
+          <span className="challenge__text">
+            <strong>{friend.n?.trim() || "A friend"}</strong> challenged you ·{" "}
+            {friend.q === 5 ? "found all 5 fourges" : `${friend.q}/5 fourges`} ·{" "}
+            <span className="challenge__target">beat {friend.s} pts</span>
+          </span>
+        </div>
+      )}
+
       <CompanionStrip
         online={livePlayers}
         presenceEnabled={presenceEnabled}

@@ -322,6 +322,24 @@ html, body {
 .banner h2 { margin: 0 0 4px; }
 .banner p { margin: 0; color: var(--ink-dim); font-size: 14px; }
 
+/* ---- Incoming challenge callout (friend-arrival hook) ---- */
+.challenge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(160deg, rgba(124, 92, 255, 0.22), rgba(91, 140, 255, 0.14));
+  border: 1px solid rgba(124, 92, 255, 0.45);
+  border-radius: var(--radius);
+  padding: 11px 14px;
+  margin: 4px 0 12px;
+  font-size: 14px;
+  color: var(--ink);
+}
+.challenge__spark { font-size: 18px; line-height: 1; }
+.challenge__text { line-height: 1.35; }
+.challenge__text strong { color: var(--accent-2); }
+.challenge__target { color: var(--gold); font-weight: 700; white-space: nowrap; }
+
 /* ---- Name + share ---- */
 .name-row {
   display: flex;
