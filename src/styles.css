@@ -343,15 +343,37 @@ html, body {
 .coach__lead { margin: 0; font-size: 15px; color: var(--ink); }
 .coach__lead strong { color: var(--accent); letter-spacing: 0.5px; }
 .coach__step { margin: 3px 0 0; font-size: 13px; color: var(--ink-dim); }
-.coach__dots { display: flex; gap: 6px; margin-top: 9px; }
-.coach__dot {
-  width: 9px; height: 9px;
-  border-radius: 50%;
-  background: var(--line-strong);
-  transition: background 0.2s ease, transform 0.2s ease;
+/* The target word, broken into its tile pieces — points at the next token. */
+.coach__pieces { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 2px; }
+.coach__piece {
+  padding: 3px 8px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+  color: var(--muted);
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 }
-.coach__dot--done { background: var(--accent); }
-.coach__dot--now { background: var(--gold); transform: scale(1.25); }
+.coach__piece--done {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+}
+.coach__piece--done::before { content: "✓ "; }
+.coach__piece--now {
+  background: var(--gold);
+  border-color: var(--gold-deep);
+  color: #3a2600;
+  transform: scale(1.12);
+  box-shadow: 0 0 0 3px rgba(224, 169, 43, 0.25);
+  animation: piecepulse 1.2s ease-in-out infinite;
+}
+@keyframes piecepulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(224, 169, 43, 0.2); }
+  50% { box-shadow: 0 0 0 5px rgba(224, 169, 43, 0.32); }
+}
 .coach__skip {
   flex: none;
   align-self: flex-start;

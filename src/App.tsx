@@ -469,15 +469,27 @@ export default function App() {
           <div className="coach__body">
             <p className="coach__lead">
               {coachStep! < 4 ? (
-                <>Let's spell <strong>{coachTarget!.word.toUpperCase()}</strong> together.</>
+                <>Spell <strong>{coachTarget!.word.toUpperCase()}</strong> — one piece at a time.</>
               ) : (
                 <>Nice — <strong>{coachTarget!.word.toUpperCase()}</strong> is ready!</>
               )}
             </p>
+            <div className="coach__pieces" aria-hidden>
+              {coachTarget!.tiles.map((tIdx, i) => (
+                <span
+                  key={i}
+                  className={`coach__piece ${i < coachStep! ? "coach__piece--done" : i === coachStep! ? "coach__piece--now" : "coach__piece--todo"}`}
+                >
+                  {puzzle.tiles[tIdx]}
+                </span>
+              ))}
+            </div>
             <p className="coach__step">
-              {coachStep! < 4
-                ? "Tap the highlighted tile to add its piece."
-                : "Now tap Enter to forge it."}
+              {coachStep! < 4 ? (
+                <>👇 Tap the glowing <strong>{puzzle.tiles[coachTileIndex!]}</strong> tile below</>
+              ) : (
+                <>👇 Now tap <strong>Enter</strong> to forge it</>
+              )}
             </p>
             {coachWrong > 0 && (
               <div className="coach__nudge" key={coachWrong} role="alert">
@@ -488,14 +500,6 @@ export default function App() {
                     : `Tap “${puzzle.tiles[coachTileIndex!]}” — it's the gold glowing tile 👆`}
               </div>
             )}
-            <div className="coach__dots" aria-hidden>
-              {[0, 1, 2, 3].map((i) => (
-                <span
-                  key={i}
-                  className={`coach__dot ${i < coachStep! ? "coach__dot--done" : i === coachStep! ? "coach__dot--now" : ""}`}
-                />
-              ))}
-            </div>
           </div>
           <button type="button" className="coach__skip" onClick={endCoach}>
             Skip

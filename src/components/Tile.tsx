@@ -29,8 +29,8 @@ export default function Tile({ text, index, selected, order, used, starter, coac
       {order != null && <span className="tile__order">{order}</span>}
       {coach && (
         <span className="tile__coach" aria-hidden>
-          <span className="tile__coach-hand">👆</span>
-          <span className="tile__coach-label">Tap here</span>
+          <span className="tile__coach-label">Tap</span>
+          <span className="tile__coach-hand">👇</span>
         </span>
       )}
     </button>
