@@ -202,9 +202,10 @@ function buildCandidatePuzzle() {
   if (quartiles.size !== 5) return null;
   // Gate 3: fairness — enough shorter words to explore
   if (found.size < 18) return null;
-  // Gate 4: avoid too many identical tiles (keep boards readable)
+  // Gate 4: tiles must NEVER repeat — every one of the 20 fragments is distinct.
+  // (Two source words sharing a fragment, e.g. both yielding "PR", is rejected.)
   const uniqTiles = new Set(tiles.map((t) => t.toUpperCase()));
-  if (uniqTiles.size < 17) return null;
+  if (uniqTiles.size !== 20) return null;
 
   return {
     tiles: shuffle(tiles).map((t) => t.toUpperCase()),
