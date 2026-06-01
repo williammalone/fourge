@@ -67,14 +67,15 @@ export default function App() {
   const [streak, setStreak] = useState(loadStreak().count);
   const [boardFlash, setBoardFlash] = useState(false);
   const [showIntro, setShowIntro] = useState(() => !introSeen());
-  // Distinct days played, counted once on mount. Drives the difficulty ramp;
-  // declared before `easy` so loadEasy()'s default sees today's count.
-  const [plays] = useState(() => recordPlayDay(dayNumber()));
+  // Count today toward the play tally before `easy` initializes, so loadEasy()'s
+  // default ramp (easy on for a player's first few days) sees today's count.
+  useState(() => recordPlayDay(dayNumber()));
   const [easy, setEasy] = useState(() => loadEasy());
-  // Interactive "tap here" tutorial. null = inactive; 0-3 = which tile to tap
-  // next; 4 = tap Enter. Walks a first-timer through building one real Fourge.
+  // Guided mode (easy): pick a Fourge and we walk you through its tiles, one at
+  // a time. `guideWord` = the Fourge being guided; `coachStep` = 0-3 (which tile
+  // to tap next) or 4 (tap Enter). `coachWrong` drives the escalating nudge.
+  const [guideWord, setGuideWord] = useState<string | null>(null);
   const [coachStep, setCoachStep] = useState<number | null>(null);
-  // Count of wrong taps at the current step — drives an escalating popup hint.
   const [coachWrong, setCoachWrong] = useState(0);
 
   const toastTimer = useRef<number | undefined>(undefined);
@@ -89,6 +90,13 @@ export default function App() {
     setEasy((on) => {
       const next = !on;
       saveEasy(next);
+      if (!next) {
+        // Turning easy off cancels any in-progress guide.
+        setGuideWord(null);
+        setCoachStep(null);
+        setCoachWrong(0);
+        setSelection([]);
+      }
       return next;
     });
   }, []);
@@ -151,9 +159,9 @@ export default function App() {
     return s;
   }, [state]);
 
-  // ---- Easy mode hints: starter fragments + glowing starter tiles ----------
-  // Only the Fourges you haven't found yet are hinted, so the help recedes as
-  // you solve. Computed regardless of `easy` (cheap); applied only when on.
+  // ---- Easy mode = guided mode ---------------------------------------------
+  // Each Fourge's tile decomposition (the guide's data). With unique tiles the
+  // decomposition is unambiguous, so a guide can light the exact next tile.
   const hints = useMemo(
     () => (puzzle ? quartileHints(puzzle) : []),
     [puzzle],
@@ -162,22 +170,12 @@ export default function App() {
     () => hints.filter((h) => !foundWordSet.has(h.word)),
     [hints, foundWordSet],
   );
-  const starterTiles = useMemo(
-    () => (easy ? new Set(unfoundHints.map((h) => h.starterIndex)) : undefined),
-    [easy, unfoundHints],
+  // The Fourge currently being guided, and where we are in it.
+  const coachTarget = useMemo(
+    () => (guideWord ? hints.find((h) => h.word === guideWord) ?? null : null),
+    [guideWord, hints],
   );
-  // Difficulty ramp: a player's very first day reveals the full answer words
-  // (just find the tiles); after that, easy mode shows only starter fragments.
-  const revealWords = easy && plays <= 1;
-  const slotHints = easy
-    ? revealWords
-      ? unfoundHints.map((h) => h.word)
-      : unfoundHints.map((h) => h.firstFragment)
-    : undefined;
-
-  // ---- Interactive tutorial: the word we walk a newcomer through building ----
-  const coachTarget = unfoundHints[0] ?? null;
-  const coaching = coachStep != null && coachTarget != null;
+  const coaching = easy && coachStep != null && coachTarget != null;
   const coachTileIndex =
     coaching && coachStep! < 4 ? coachTarget!.tiles[coachStep!] : null;
   const coachEnter = coaching && coachStep === 4;
@@ -237,18 +235,21 @@ export default function App() {
     [coaching],
   );
 
-  const endCoach = useCallback(() => {
+  const endGuide = useCallback(() => {
     markTutorialDone();
+    setGuideWord(null);
     setCoachStep(null);
     setCoachWrong(0);
     setSelection([]);
   }, []);
 
-  const startCoach = useCallback(() => {
-    setSelection([]);
-    setCoachWrong(0);
+  // Begin guiding a specific Fourge: light its first tile and walk tile by tile.
+  const startGuide = useCallback((word: string) => {
+    markTutorialDone();
+    setGuideWord(word);
     setCoachStep(0);
-    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+    setCoachWrong(0);
+    setSelection([]);
   }, []);
 
   const clear = useCallback(() => setSelection([]), []);
@@ -309,13 +310,13 @@ export default function App() {
       setBoardFlash(true);
       window.setTimeout(() => setBoardFlash(false), 900);
       window.setTimeout(() => setJustFoundQuartile(null), 1200);
-      flashToast(coaching ? "🎉 Your first Fourge! +8" : `Fourge! +8 — ${fw.word}`);
+      flashToast(coaching ? `🎉 ${fw.word} — forged! +8` : `Fourge! +8 — ${fw.word}`);
     } else {
       flashToast(`+${fw.points}`);
     }
     setSelection([]);
-    if (coaching) endCoach(); // guided word submitted — lesson complete
-  }, [state, puzzle, dict, selection, foundWordSet, flashToast, name, easy, coaching, endCoach]);
+    if (coaching) endGuide(); // guided word submitted — done; pick another
+  }, [state, puzzle, dict, selection, foundWordSet, flashToast, name, easy, coaching, endGuide]);
 
   // keyboard: Enter submits, Backspace removes last, Esc clears
   useEffect(() => {
@@ -333,15 +334,18 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [doSubmit, coaching, coachEnter]);
 
-  // Auto-start the interactive tutorial once, for a first-timer on a fresh board
-  // (right after they dismiss the intro). Returning players never see it.
+  // Auto-guide the first Fourge once, for a first-timer on a fresh board (right
+  // after they dismiss the intro) so they discover the guide. Then they tap any
+  // Fourge to guide the rest. Returning players never see it.
   useEffect(() => {
     if (coachStartedRef.current) return;
-    if (phase !== "ready" || showIntro) return;
-    if (tutorialDone() || !coachTarget || !state || state.found.length > 0) return;
+    if (phase !== "ready" || showIntro || !easy) return;
+    if (tutorialDone() || !state || state.found.length > 0) return;
+    const first = unfoundHints[0];
+    if (!first) return;
     coachStartedRef.current = true;
-    setCoachStep(0);
-  }, [phase, showIntro, coachTarget, state]);
+    startGuide(first.word);
+  }, [phase, showIntro, easy, unfoundHints, state, startGuide]);
 
   function onNameChange(v: string) {
     setName(v);
@@ -422,11 +426,9 @@ export default function App() {
               <span className="intro__easy-text">
                 <strong>💡 Easy mode</strong>
                 <span className="intro__easy-sub">
-                  {!easy
-                    ? "No hints — full challenge"
-                    : revealWords
-                      ? "Answer words shown — just find the tiles"
-                      : "Glowing tiles show where each Fourge starts"}
+                  {easy
+                    ? "Tap a Fourge and we'll guide you tile by tile"
+                    : "No hints — full challenge"}
                 </span>
               </span>
               <span className={`easy-toggle__knob ${easy ? "easy-toggle__knob--on" : ""}`} aria-hidden />
@@ -473,11 +475,12 @@ export default function App() {
       />
 
       <QuartileSlots
-        total={5}
+        quartiles={puzzle.quartiles}
         found={state.found}
         justFound={justFoundQuartile}
-        hints={slotHints}
-        hintsAreWords={revealWords}
+        easy={easy}
+        guideWord={guideWord}
+        onPick={startGuide}
       />
 
       {coaching ? (
@@ -517,19 +520,15 @@ export default function App() {
               </div>
             )}
           </div>
-          <button type="button" className="coach__skip" onClick={endCoach}>
-            Skip
+          <button type="button" className="coach__skip" onClick={endGuide}>
+            Stop
           </button>
         </div>
       ) : (
         <>
           <div className="easy-row">
             <span className="easy-row__text">
-              {!easy
-                ? "Hints off — full challenge"
-                : revealWords
-                  ? "💡 Easy — answers shown to start you off"
-                  : "💡 Easy mode — starter hints on"}
+              {easy ? "💡 Easy mode — guided" : "Hints off — full challenge"}
             </span>
             <button
               type="button"
@@ -545,11 +544,7 @@ export default function App() {
           </div>
           {easy && !state.complete && (
             <p className="easy-hint-note">
-              {revealWords ? (
-                <>The <strong>answer words</strong> are shown above — find the tiles that spell each, starting from a glowing one.</>
-              ) : (
-                <><strong>Glowing tiles</strong> start a Fourge — tap one, then add 3 more.</>
-              )}
+              👆 <strong>Tap a Fourge above</strong> — we'll walk you through its tiles, one tap at a time.
             </p>
           )}
         </>
@@ -561,7 +556,6 @@ export default function App() {
           order={order}
           selection={selection}
           usedTiles={usedTiles}
-          starterTiles={starterTiles}
           coachTile={coachTileIndex}
           coachNudge={coachWrong > 0}
           coachNudgeKey={coachWrong}
@@ -633,9 +627,21 @@ export default function App() {
           </ul>
         </details>
         <nav className="footer__nav">
-          <button type="button" className="footer__link" onClick={startCoach}>
-            ↻ Replay tutorial
-          </button>
+          {!state.complete && unfoundHints[0] && (
+            <button
+              type="button"
+              className="footer__link"
+              onClick={() => {
+                if (!easy) {
+                  setEasy(true);
+                  saveEasy(true);
+                }
+                startGuide(unfoundHints[0].word);
+              }}
+            >
+              💡 Guide me through a Fourge
+            </button>
+          )}
           <a href={`${import.meta.env.BASE_URL}archive/`}>Past puzzles →</a>
           {SUPPORT_URL && (
             <a href={SUPPORT_URL} target="_blank" rel="noopener noreferrer">

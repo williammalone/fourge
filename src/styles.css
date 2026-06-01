@@ -241,28 +241,27 @@ html, body {
   word-break: break-word;
   text-transform: lowercase;
 }
-/* Easy mode: an empty slot showing a starter fragment hint, e.g. "MO…". */
-.gem--hint {
-  border-style: solid;
-  border-color: var(--banner-border);
+/* Easy/guided mode: an unfound Fourge revealed as a tappable "guide me" target. */
+.gem--pick {
+  cursor: pointer;
+  border: 1.5px solid var(--line-strong);
+  background: var(--panel);
+  font: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease;
+}
+.gem--pick .gem__word { color: var(--ink); }
+.gem--pick:hover {
+  border-color: var(--gold-deep);
   background: var(--banner-bg);
 }
-.gem__hint {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  color: var(--gold-deep);
+.gem--pick:active { transform: translateY(1px); }
+/* The Fourge currently being guided. */
+.gem--guiding {
+  border-color: var(--gold-deep);
+  background: var(--banner-bg);
+  box-shadow: 0 0 0 2px rgba(224, 169, 43, 0.35);
 }
-/* First-day reveal: the full answer word shown in an unfilled slot. */
-.gem__hint-word {
-  font-size: 9.5px;
-  font-weight: 800;
-  line-height: 1.05;
-  color: var(--gold-deep);
-  text-transform: lowercase;
-  word-break: break-word;
-  padding: 0 2px;
-}
+.gem--guiding .gem__word { color: var(--gold-deep); }
 .gem--pop { animation: gempop 0.7s cubic-bezier(0.2, 1.2, 0.3, 1); }
 @keyframes gempop {
   0% { transform: scale(0.5) rotate(-8deg); opacity: 0; }
