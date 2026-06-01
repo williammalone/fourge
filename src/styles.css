@@ -364,6 +364,24 @@ html, body {
   padding: 2px 4px;
   text-decoration: underline;
 }
+/* Popup hint shown when a newcomer taps the wrong tile (re-pops each wrong tap). */
+.coach__nudge {
+  margin-top: 8px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  background: var(--gold);
+  color: #3a2600;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.3;
+  box-shadow: 0 4px 12px rgba(224, 169, 43, 0.35);
+  animation: nudgepop 0.32s cubic-bezier(0.2, 1.3, 0.4, 1);
+}
+@keyframes nudgepop {
+  0% { transform: scale(0.85) translateY(-4px); opacity: 0; }
+  60% { transform: scale(1.04); }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
 
 /* The single tile to tap next — spotlight it, dim the rest of the grid. */
 .grid--coaching .tile:not(.tile--coach):not(.tile--selected) { opacity: 0.32; transition: opacity 0.2s ease; }
@@ -378,6 +396,17 @@ html, body {
 @keyframes coachpulse {
   0%, 100% { box-shadow: inset 0 0 0 2px var(--gold), 0 0 0 3px rgba(224, 169, 43, 0.15); }
   50% { box-shadow: inset 0 0 0 2px var(--gold), 0 0 0 7px rgba(224, 169, 43, 0.32); }
+}
+/* On a wrong tap the coach tile remounts with this class — a quick wiggle. */
+.tile.tile--coach.tile--coach-nudge {
+  animation: coachpulse 1.3s ease-in-out infinite, coachwiggle 0.45s ease;
+}
+@keyframes coachwiggle {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(3px); }
 }
 .tile__coach {
   position: absolute;

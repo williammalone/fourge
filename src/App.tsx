@@ -70,6 +70,8 @@ export default function App() {
   // Interactive "tap here" tutorial. null = inactive; 0-3 = which tile to tap
   // next; 4 = tap Enter. Walks a first-timer through building one real Fourge.
   const [coachStep, setCoachStep] = useState<number | null>(null);
+  // Count of wrong taps at the current step — drives an escalating popup hint.
+  const [coachWrong, setCoachWrong] = useState(0);
 
   const toastTimer = useRef<number | undefined>(undefined);
   const coachStartedRef = useRef(false);
@@ -194,10 +196,14 @@ export default function App() {
   const toggleTile = useCallback(
     (idx: number) => {
       if (!state || state.complete) return;
-      // During the tutorial, only the highlighted tile advances the lesson;
-      // taps elsewhere are ignored so the guided word always builds correctly.
+      // During the tutorial, only the highlighted tile advances the lesson.
+      // A wrong tap pops open an (escalating) hint instead of doing nothing.
       if (coaching) {
-        if (idx !== coachTileIndex) return;
+        if (idx !== coachTileIndex) {
+          setCoachWrong((w) => w + 1);
+          return;
+        }
+        setCoachWrong(0);
         setSelection((sel) => (sel.includes(idx) ? sel : [...sel, idx]));
         setCoachStep((s) => (s == null ? s : s + 1));
         return;
@@ -223,11 +229,13 @@ export default function App() {
   const endCoach = useCallback(() => {
     markTutorialDone();
     setCoachStep(null);
+    setCoachWrong(0);
     setSelection([]);
   }, []);
 
   const startCoach = useCallback(() => {
     setSelection([]);
+    setCoachWrong(0);
     setCoachStep(0);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
@@ -471,6 +479,15 @@ export default function App() {
                 ? "Tap the highlighted tile to add its piece."
                 : "Now tap Enter to forge it."}
             </p>
+            {coachWrong > 0 && (
+              <div className="coach__nudge" key={coachWrong} role="alert">
+                {coachStep! >= 4
+                  ? "👇 Tap the Enter button below to forge your word."
+                  : coachWrong === 1
+                    ? "Not that tile — tap the one glowing gold 👆"
+                    : `Tap “${puzzle.tiles[coachTileIndex!]}” — it's the gold glowing tile 👆`}
+              </div>
+            )}
             <div className="coach__dots" aria-hidden>
               {[0, 1, 2, 3].map((i) => (
                 <span
@@ -518,6 +535,8 @@ export default function App() {
           usedTiles={usedTiles}
           starterTiles={starterTiles}
           coachTile={coachTileIndex}
+          coachNudge={coachWrong > 0}
+          coachNudgeKey={coachWrong}
           onTileClick={toggleTile}
         />
         <WordTray

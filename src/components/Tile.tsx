@@ -6,15 +6,17 @@ interface TileProps {
   used: boolean; // dimmed: helped form a found Fourge (still reusable)
   starter?: boolean; // easy mode: starts an unfound Fourge — glow it
   coach?: boolean; // tutorial: this is the tile to tap next — point at it
+  coachNudge?: boolean; // tutorial: a wrong tap happened — wiggle for attention
   onClick: (index: number) => void;
 }
 
-export default function Tile({ text, index, selected, order, used, starter, coach, onClick }: TileProps) {
+export default function Tile({ text, index, selected, order, used, starter, coach, coachNudge, onClick }: TileProps) {
   const cls = ["tile"];
   if (selected) cls.push("tile--selected");
   if (used && !selected) cls.push("tile--used");
   if (starter && !selected) cls.push("tile--starter");
   if (coach) cls.push("tile--coach");
+  if (coachNudge) cls.push("tile--coach-nudge");
   return (
     <button
       type="button"
