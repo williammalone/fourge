@@ -40,6 +40,8 @@ export interface GameState {
   complete: boolean;
   /** Player's chosen display name (for sharing). */
   name?: string;
+  /** True if easy-mode hints were on for any word found this game (for sharing). */
+  easyUsed?: boolean;
 }
 
 /** Result of attempting to submit a selection of tiles. */

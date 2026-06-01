@@ -17,6 +17,8 @@ export interface ShareResult {
   w: number;
   /** Timestamp (epoch ms) when shared — for "played Xm ago". */
   t?: number;
+  /** 1 if easy-mode hints were used (so a friend sees an honest 💡 marker). */
+  e?: 1;
 }
 
 // ---- URL-safe base64 -------------------------------------------------------
@@ -76,7 +78,7 @@ export function buildShareText(
   url: string,
 ): string {
   const lines = [
-    `Fourge #${result.d}`,
+    `Fourge #${result.d}${result.e ? " \u{1F4A1} easy" : ""}`,
     `${gemBar(result.q)}  ${result.q}/5 fourges`,
     `⭐ ${result.s} pts · ${result.w} words${streak > 1 ? ` · \u{1F525} ${streak}` : ""}`,
     url,

@@ -238,6 +238,8 @@ export default function App() {
         quartilesFound,
         complete,
         name: name || prev.name,
+        // Sticky: once hints helped find a word, the game is flagged easy.
+        easyUsed: prev.easyUsed || easy,
       };
       saveState(next);
       if (complete) {
@@ -256,7 +258,7 @@ export default function App() {
       flashToast(`+${fw.points}`);
     }
     setSelection([]);
-  }, [state, puzzle, dict, selection, foundWordSet, flashToast, name]);
+  }, [state, puzzle, dict, selection, foundWordSet, flashToast, name, easy]);
 
   // keyboard: Enter submits, Backspace removes last, Esc clears
   useEffect(() => {
@@ -304,6 +306,7 @@ export default function App() {
     s: state.score,
     q: state.quartilesFound,
     w: state.found.length,
+    e: state.easyUsed ? 1 : undefined,
   };
 
   return (
@@ -364,7 +367,8 @@ export default function App() {
           <span className="challenge__spark" aria-hidden>⚔️</span>
           <span className="challenge__text">
             <strong>{friend.n?.trim() || "A friend"}</strong> challenged you ·{" "}
-            {friend.q === 5 ? "found all 5 fourges" : `${friend.q}/5 fourges`} ·{" "}
+            {friend.q === 5 ? "found all 5 fourges" : `${friend.q}/5 fourges`}
+            {friend.e ? " 💡" : ""} ·{" "}
             <span className="challenge__target">beat {friend.s} pts</span>
           </span>
         </div>
@@ -404,8 +408,8 @@ export default function App() {
 
       {easy && !state.complete && (
         <p className="easy-hint-note">
-          The glowing tiles each <strong>start a Fourge</strong> — build out from one
-          to spell the word above it.
+          Each <strong>glowing tile</strong> begins a Fourge — its first piece shows in
+          the slots above. Tap it, then add 3 more tiles to finish the word.
         </p>
       )}
 

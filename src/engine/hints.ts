@@ -80,12 +80,16 @@ export function quartileHints(puzzle: Puzzle): QuartileHint[] {
   return hints;
 }
 
-/** Enumerate up to a handful of decompositions (used to avoid starter clashes). */
+/**
+ * Enumerate decompositions that use *exactly* `tileCount` tiles (used to avoid
+ * starter clashes). A Fourge is always 4 tiles, so requiring the exact count
+ * rejects coincidental shorter spellings that would glow the wrong tile.
+ */
 function allDecompositions(
   tiles: string[],
   word: string,
-  maxTiles = 4,
-  limit = 8,
+  tileCount = 4,
+  limit = 32,
 ): number[][] {
   const target = word.toUpperCase();
   const used: boolean[] = new Array(tiles.length).fill(false);
@@ -95,10 +99,10 @@ function allDecompositions(
   function dfs(pos: number): void {
     if (out.length >= limit) return;
     if (pos === target.length) {
-      out.push(path.slice());
+      if (path.length === tileCount) out.push(path.slice());
       return;
     }
-    if (path.length >= maxTiles) return;
+    if (path.length >= tileCount) return;
     for (let i = 0; i < tiles.length; i++) {
       if (used[i]) continue;
       const frag = tiles[i].toUpperCase();
