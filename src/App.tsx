@@ -4,6 +4,7 @@ import { loadDictionary } from "./engine/dictionary";
 import { submit } from "./engine/validate";
 import { dayNumber, puzzleForDay } from "./lib/daily";
 import { readFromUrl, type ShareResult } from "./lib/share";
+import { quartileHints } from "./engine/hints";
 import {
   loadState,
   saveState,
@@ -13,6 +14,8 @@ import {
   recordCompletion,
   introSeen,
   markIntroSeen,
+  loadEasy,
+  saveEasy,
 } from "./lib/storage";
 import Grid from "./components/Grid";
 import WordTray from "./components/WordTray";
@@ -61,12 +64,21 @@ export default function App() {
   const [streak, setStreak] = useState(loadStreak().count);
   const [boardFlash, setBoardFlash] = useState(false);
   const [showIntro, setShowIntro] = useState(() => !introSeen());
+  const [easy, setEasy] = useState(() => loadEasy());
 
   const toastTimer = useRef<number | undefined>(undefined);
 
   const dismissIntro = useCallback(() => {
     markIntroSeen();
     setShowIntro(false);
+  }, []);
+
+  const toggleEasy = useCallback(() => {
+    setEasy((on) => {
+      const next = !on;
+      saveEasy(next);
+      return next;
+    });
   }, []);
 
   // ---- Load assets + resolve today's puzzle --------------------------------
@@ -126,6 +138,23 @@ export default function App() {
     });
     return s;
   }, [state]);
+
+  // ---- Easy mode hints: starter fragments + glowing starter tiles ----------
+  // Only the Fourges you haven't found yet are hinted, so the help recedes as
+  // you solve. Computed regardless of `easy` (cheap); applied only when on.
+  const hints = useMemo(
+    () => (puzzle ? quartileHints(puzzle) : []),
+    [puzzle],
+  );
+  const unfoundHints = useMemo(
+    () => hints.filter((h) => !foundWordSet.has(h.word)),
+    [hints, foundWordSet],
+  );
+  const starterTiles = useMemo(
+    () => (easy ? new Set(unfoundHints.map((h) => h.starterIndex)) : undefined),
+    [easy, unfoundHints],
+  );
+  const slotHints = easy ? unfoundHints.map((h) => h.firstFragment) : undefined;
 
   const flashToast = useCallback((msg: string) => {
     setToast(msg);
@@ -286,12 +315,28 @@ export default function App() {
               <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width={40} height={40} />
               <span>Fourge</span>
             </div>
-            <p className="intro__lead">A daily word puzzle. Combine fragment tiles into words.</p>
+            <p className="intro__lead">
+              The tiles aren't letters — they're <strong>fragments</strong> of words.
+              Snap them together to spell.
+            </p>
+            <div className="intro__demo" aria-hidden>
+              <div className="intro__frags">
+                <span className="intro__frag">MO</span>
+                <span className="intro__plus">+</span>
+                <span className="intro__frag">TOR</span>
+                <span className="intro__plus">+</span>
+                <span className="intro__frag">CY</span>
+                <span className="intro__plus">+</span>
+                <span className="intro__frag">CLE</span>
+              </div>
+              <div className="intro__arrow">↓</div>
+              <div className="intro__result">MOTORCYCLE</div>
+            </div>
             <ul className="intro__steps">
               <li><strong>Tap up to 4 tiles</strong> to build a word, then <strong>Enter</strong>.</li>
               <li>A <strong>4-tile word is a Fourge</strong> — 8 pts. Each board hides <strong>5</strong>.</li>
               <li>Tiles are <strong>reusable</strong>. Every valid English word scores.</li>
-              <li>Same board for everyone, every day. <strong>Challenge a friend.</strong></li>
+              <li><strong>💡 Easy mode is on</strong> — glowing tiles show where each Fourge starts. Turn it off anytime.</li>
             </ul>
             <button type="button" className="btn btn--share intro__go" onClick={dismissIntro}>
               {friend ? "Take the challenge \u{2694}\u{FE0F}" : "Play today's Fourge \u{1F7EA}"}
@@ -333,7 +378,36 @@ export default function App() {
         myScore={state.score}
       />
 
-      <QuartileSlots total={5} found={state.found} justFound={justFoundQuartile} />
+      <div className="modebar">
+        <QuartileSlots
+          total={5}
+          found={state.found}
+          justFound={justFoundQuartile}
+          hints={slotHints}
+        />
+        <button
+          type="button"
+          className={`easy-toggle ${easy ? "easy-toggle--on" : ""}`}
+          onClick={toggleEasy}
+          role="switch"
+          aria-checked={easy}
+          title={
+            easy
+              ? "Easy mode on — starter hints shown. Tap to turn off."
+              : "Easy mode off. Tap for starter hints."
+          }
+        >
+          <span className="easy-toggle__knob" aria-hidden />
+          <span className="easy-toggle__label">💡 Easy</span>
+        </button>
+      </div>
+
+      {easy && !state.complete && (
+        <p className="easy-hint-note">
+          The glowing tiles each <strong>start a Fourge</strong> — build out from one
+          to spell the word above it.
+        </p>
+      )}
 
       <main className="board">
         <Grid
@@ -341,6 +415,7 @@ export default function App() {
           order={order}
           selection={selection}
           usedTiles={usedTiles}
+          starterTiles={starterTiles}
           onTileClick={toggleTile}
         />
         <WordTray
@@ -403,6 +478,7 @@ export default function App() {
             <li>1/2/3 tiles score 1/2/3 pts. A <strong>4-tile Fourge is 8 pts</strong>.</li>
             <li>Find all <strong>5 Fourges</strong> to solve. Tiles can be reused across words.</li>
             <li>Fourge tiles <strong>dim once found</strong> — but stay usable for smaller words (motorbike → bike).</li>
+            <li><strong>💡 Easy mode</strong> glows each Fourge's starting tile and shows its first fragment — toggle it above the board.</li>
             <li>New puzzle every day. Same board for everyone.</li>
           </ul>
         </details>

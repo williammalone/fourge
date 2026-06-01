@@ -7,6 +7,7 @@ const NAME_KEY = "quartiles:name";
 const STREAK_KEY = "quartiles:streak";
 const PID_KEY = "quartiles:pid";
 const INTRO_KEY = "quartiles:intro";
+const EASY_KEY = "quartiles:easy";
 
 function safeGet(key: string): string | null {
   try {
@@ -56,6 +57,21 @@ export function introSeen(): boolean {
 }
 export function markIntroSeen(): void {
   safeSet(INTRO_KEY, "1");
+}
+
+/**
+ * Whether "Easy mode" (starter-fragment hints + glowing starter tiles) is on.
+ * Defaults ON for brand-new players — the fragment→word idea is the hard part
+ * to grok, so first-timers learn it with hints, then can turn them off. Players
+ * who've already seen the intro default OFF (don't change the game under them).
+ */
+export function loadEasy(): boolean {
+  const v = safeGet(EASY_KEY);
+  if (v !== null) return v === "1";
+  return !introSeen();
+}
+export function saveEasy(on: boolean): void {
+  safeSet(EASY_KEY, on ? "1" : "0");
 }
 
 export function loadName(): string {

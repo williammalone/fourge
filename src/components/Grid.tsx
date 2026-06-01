@@ -6,10 +6,12 @@ interface GridProps {
   order: number[];
   selection: number[];
   usedTiles: Set<number>;
+  /** Easy mode: tiles that start an as-yet-unfound Fourge (glow them). */
+  starterTiles?: Set<number>;
   onTileClick: (index: number) => void;
 }
 
-export default function Grid({ tiles, order, selection, usedTiles, onTileClick }: GridProps) {
+export default function Grid({ tiles, order, selection, usedTiles, starterTiles, onTileClick }: GridProps) {
   return (
     <div className="grid" role="group" aria-label="puzzle tiles">
       {order.map((idx) => {
@@ -22,6 +24,7 @@ export default function Grid({ tiles, order, selection, usedTiles, onTileClick }
             selected={pos !== -1}
             order={pos === -1 ? null : pos + 1}
             used={usedTiles.has(idx)}
+            starter={starterTiles?.has(idx)}
             onClick={onTileClick}
           />
         );
