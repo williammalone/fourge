@@ -504,8 +504,7 @@ export default function App() {
           </div>
           {easy && !state.complete && (
             <p className="easy-hint-note">
-              Each <strong>glowing tile</strong> begins a Fourge — its first piece shows in
-              the slots above. Tap it, then add 3 more tiles to finish the word.
+              <strong>Glowing tiles</strong> start a Fourge — tap one, then add 3 more.
             </p>
           )}
         </>
