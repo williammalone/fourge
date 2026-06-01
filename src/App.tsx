@@ -16,6 +16,8 @@ import {
   markIntroSeen,
   loadEasy,
   saveEasy,
+  tutorialDone,
+  markTutorialDone,
 } from "./lib/storage";
 import Grid from "./components/Grid";
 import WordTray from "./components/WordTray";
@@ -65,8 +67,12 @@ export default function App() {
   const [boardFlash, setBoardFlash] = useState(false);
   const [showIntro, setShowIntro] = useState(() => !introSeen());
   const [easy, setEasy] = useState(() => loadEasy());
+  // Interactive "tap here" tutorial. null = inactive; 0-3 = which tile to tap
+  // next; 4 = tap Enter. Walks a first-timer through building one real Fourge.
+  const [coachStep, setCoachStep] = useState<number | null>(null);
 
   const toastTimer = useRef<number | undefined>(undefined);
+  const coachStartedRef = useRef(false);
 
   const dismissIntro = useCallback(() => {
     markIntroSeen();
@@ -156,6 +162,13 @@ export default function App() {
   );
   const slotHints = easy ? unfoundHints.map((h) => h.firstFragment) : undefined;
 
+  // ---- Interactive tutorial: the word we walk a newcomer through building ----
+  const coachTarget = unfoundHints[0] ?? null;
+  const coaching = coachStep != null && coachTarget != null;
+  const coachTileIndex =
+    coaching && coachStep! < 4 ? coachTarget!.tiles[coachStep!] : null;
+  const coachEnter = coaching && coachStep === 4;
+
   const flashToast = useCallback((msg: string) => {
     setToast(msg);
     window.clearTimeout(toastTimer.current);
@@ -181,6 +194,14 @@ export default function App() {
   const toggleTile = useCallback(
     (idx: number) => {
       if (!state || state.complete) return;
+      // During the tutorial, only the highlighted tile advances the lesson;
+      // taps elsewhere are ignored so the guided word always builds correctly.
+      if (coaching) {
+        if (idx !== coachTileIndex) return;
+        setSelection((sel) => (sel.includes(idx) ? sel : [...sel, idx]));
+        setCoachStep((s) => (s == null ? s : s + 1));
+        return;
+      }
       // Dimmed (Fourge) tiles stay selectable — they're reusable for other words.
       setSelection((sel) => {
         if (sel.includes(idx)) return sel.filter((i) => i !== idx);
@@ -188,11 +209,27 @@ export default function App() {
         return [...sel, idx];
       });
     },
-    [state],
+    [state, coaching, coachTileIndex],
   );
 
-  const removeTile = useCallback((idx: number) => {
-    setSelection((sel) => sel.filter((i) => i !== idx));
+  const removeTile = useCallback(
+    (idx: number) => {
+      if (coaching) return; // don't let tutorial taps undo the guided word
+      setSelection((sel) => sel.filter((i) => i !== idx));
+    },
+    [coaching],
+  );
+
+  const endCoach = useCallback(() => {
+    markTutorialDone();
+    setCoachStep(null);
+    setSelection([]);
+  }, []);
+
+  const startCoach = useCallback(() => {
+    setSelection([]);
+    setCoachStep(0);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   const clear = useCallback(() => setSelection([]), []);
@@ -253,23 +290,39 @@ export default function App() {
       setBoardFlash(true);
       window.setTimeout(() => setBoardFlash(false), 900);
       window.setTimeout(() => setJustFoundQuartile(null), 1200);
-      flashToast(`Fourge! +8 — ${fw.word}`);
+      flashToast(coaching ? "🎉 Your first Fourge! +8" : `Fourge! +8 — ${fw.word}`);
     } else {
       flashToast(`+${fw.points}`);
     }
     setSelection([]);
-  }, [state, puzzle, dict, selection, foundWordSet, flashToast, name, easy]);
+    if (coaching) endCoach(); // guided word submitted — lesson complete
+  }, [state, puzzle, dict, selection, foundWordSet, flashToast, name, easy, coaching, endCoach]);
 
   // keyboard: Enter submits, Backspace removes last, Esc clears
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      if (coaching) {
+        // Only let Enter through, and only at the final step — keep the lesson on rails.
+        if (e.key === "Enter" && coachEnter) doSubmit();
+        return;
+      }
       if (e.key === "Enter") doSubmit();
       else if (e.key === "Backspace") setSelection((s) => s.slice(0, -1));
       else if (e.key === "Escape") setSelection([]);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [doSubmit]);
+  }, [doSubmit, coaching, coachEnter]);
+
+  // Auto-start the interactive tutorial once, for a first-timer on a fresh board
+  // (right after they dismiss the intro). Returning players never see it.
+  useEffect(() => {
+    if (coachStartedRef.current) return;
+    if (phase !== "ready" || showIntro) return;
+    if (tutorialDone() || !coachTarget || !state || state.found.length > 0) return;
+    coachStartedRef.current = true;
+    setCoachStep(0);
+  }, [phase, showIntro, coachTarget, state]);
 
   function onNameChange(v: string) {
     setName(v);
@@ -339,8 +392,22 @@ export default function App() {
               <li><strong>Tap up to 4 tiles</strong> to build a word, then <strong>Enter</strong>.</li>
               <li>A <strong>4-tile word is a Fourge</strong> — 8 pts. Each board hides <strong>5</strong>.</li>
               <li>Tiles are <strong>reusable</strong>. Every valid English word scores.</li>
-              <li><strong>💡 Easy mode is on</strong> — glowing tiles show where each Fourge starts. Turn it off anytime.</li>
             </ul>
+            <button
+              type="button"
+              className={`intro__easy ${easy ? "intro__easy--on" : ""}`}
+              onClick={() => toggleEasy()}
+              role="switch"
+              aria-checked={easy}
+            >
+              <span className="intro__easy-text">
+                <strong>💡 Easy mode</strong>
+                <span className="intro__easy-sub">
+                  {easy ? "Glowing tiles show where each Fourge starts" : "No hints — full challenge"}
+                </span>
+              </span>
+              <span className={`easy-toggle__knob ${easy ? "easy-toggle__knob--on" : ""}`} aria-hidden />
+            </button>
             <button type="button" className="btn btn--share intro__go" onClick={dismissIntro}>
               {friend ? "Take the challenge \u{2694}\u{FE0F}" : "Play today's Fourge \u{1F7EA}"}
             </button>
@@ -382,35 +449,66 @@ export default function App() {
         myScore={state.score}
       />
 
-      <div className="modebar">
-        <QuartileSlots
-          total={5}
-          found={state.found}
-          justFound={justFoundQuartile}
-          hints={slotHints}
-        />
-        <button
-          type="button"
-          className={`easy-toggle ${easy ? "easy-toggle--on" : ""}`}
-          onClick={toggleEasy}
-          role="switch"
-          aria-checked={easy}
-          title={
-            easy
-              ? "Easy mode on — starter hints shown. Tap to turn off."
-              : "Easy mode off. Tap for starter hints."
-          }
-        >
-          <span className="easy-toggle__knob" aria-hidden />
-          <span className="easy-toggle__label">💡 Easy</span>
-        </button>
-      </div>
+      <QuartileSlots
+        total={5}
+        found={state.found}
+        justFound={justFoundQuartile}
+        hints={slotHints}
+      />
 
-      {easy && !state.complete && (
-        <p className="easy-hint-note">
-          Each <strong>glowing tile</strong> begins a Fourge — its first piece shows in
-          the slots above. Tap it, then add 3 more tiles to finish the word.
-        </p>
+      {coaching ? (
+        <div className="coach" role="status" aria-live="polite">
+          <div className="coach__body">
+            <p className="coach__lead">
+              {coachStep! < 4 ? (
+                <>Let's spell <strong>{coachTarget!.word.toUpperCase()}</strong> together.</>
+              ) : (
+                <>Nice — <strong>{coachTarget!.word.toUpperCase()}</strong> is ready!</>
+              )}
+            </p>
+            <p className="coach__step">
+              {coachStep! < 4
+                ? "Tap the highlighted tile to add its piece."
+                : "Now tap Enter to forge it."}
+            </p>
+            <div className="coach__dots" aria-hidden>
+              {[0, 1, 2, 3].map((i) => (
+                <span
+                  key={i}
+                  className={`coach__dot ${i < coachStep! ? "coach__dot--done" : i === coachStep! ? "coach__dot--now" : ""}`}
+                />
+              ))}
+            </div>
+          </div>
+          <button type="button" className="coach__skip" onClick={endCoach}>
+            Skip
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="easy-row">
+            <span className="easy-row__text">
+              {easy ? "💡 Easy mode — starter hints on" : "Hints off — full challenge"}
+            </span>
+            <button
+              type="button"
+              className={`easy-toggle ${easy ? "easy-toggle--on" : ""}`}
+              onClick={toggleEasy}
+              role="switch"
+              aria-checked={easy}
+              aria-label="Easy mode"
+            >
+              <span className="easy-toggle__knob" aria-hidden />
+              <span className="easy-toggle__label">Easy</span>
+            </button>
+          </div>
+          {easy && !state.complete && (
+            <p className="easy-hint-note">
+              Each <strong>glowing tile</strong> begins a Fourge — its first piece shows in
+              the slots above. Tap it, then add 3 more tiles to finish the word.
+            </p>
+          )}
+        </>
       )}
 
       <main className="board">
@@ -420,12 +518,14 @@ export default function App() {
           selection={selection}
           usedTiles={usedTiles}
           starterTiles={starterTiles}
+          coachTile={coachTileIndex}
           onTileClick={toggleTile}
         />
         <WordTray
           tiles={puzzle.tiles}
           selection={selection}
           status={trayStatus}
+          coachEnter={coachEnter}
           onRemove={removeTile}
           onClear={clear}
           onSubmit={doSubmit}
@@ -487,6 +587,9 @@ export default function App() {
           </ul>
         </details>
         <nav className="footer__nav">
+          <button type="button" className="footer__link" onClick={startCoach}>
+            ↻ Replay tutorial
+          </button>
           <a href={`${import.meta.env.BASE_URL}archive/`}>Past puzzles →</a>
           {SUPPORT_URL && (
             <a href={SUPPORT_URL} target="_blank" rel="noopener noreferrer">

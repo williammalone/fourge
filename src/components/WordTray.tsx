@@ -2,6 +2,8 @@ interface WordTrayProps {
   tiles: string[];
   selection: number[];
   status: "idle" | "shake";
+  /** Tutorial: highlight the Enter button as the next thing to tap. */
+  coachEnter?: boolean;
   onRemove: (index: number) => void;
   onClear: () => void;
   onSubmit: () => void;
@@ -12,6 +14,7 @@ export default function WordTray({
   tiles,
   selection,
   status,
+  coachEnter,
   onRemove,
   onClear,
   onSubmit,
@@ -44,8 +47,14 @@ export default function WordTray({
         <button type="button" className="btn btn--ghost" onClick={onClear} disabled={empty}>
           Clear
         </button>
-        <button type="button" className="btn btn--primary" onClick={onSubmit} disabled={empty}>
+        <button
+          type="button"
+          className={`btn btn--primary ${coachEnter ? "btn--coach" : ""}`}
+          onClick={onSubmit}
+          disabled={empty}
+        >
           Enter
+          {coachEnter && <span className="btn__coach" aria-hidden>👆 Tap Enter</span>}
         </button>
       </div>
     </div>

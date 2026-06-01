@@ -8,6 +8,7 @@ const STREAK_KEY = "quartiles:streak";
 const PID_KEY = "quartiles:pid";
 const INTRO_KEY = "quartiles:intro";
 const EASY_KEY = "quartiles:easy";
+const TUTORIAL_KEY = "quartiles:tutorial";
 
 function safeGet(key: string): string | null {
   try {
@@ -57,6 +58,14 @@ export function introSeen(): boolean {
 }
 export function markIntroSeen(): void {
   safeSet(INTRO_KEY, "1");
+}
+
+/** Whether the interactive "tap here" first-word tutorial has been completed/skipped. */
+export function tutorialDone(): boolean {
+  return safeGet(TUTORIAL_KEY) === "1";
+}
+export function markTutorialDone(): void {
+  safeSet(TUTORIAL_KEY, "1");
 }
 
 /**
