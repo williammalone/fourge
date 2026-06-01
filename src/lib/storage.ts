@@ -9,6 +9,7 @@ const PID_KEY = "quartiles:pid";
 const INTRO_KEY = "quartiles:intro";
 const EASY_KEY = "quartiles:easy";
 const TUTORIAL_KEY = "quartiles:tutorial";
+const PLAYS_KEY = "quartiles:plays";
 
 function safeGet(key: string): string | null {
   try {
@@ -69,15 +70,44 @@ export function markTutorialDone(): void {
 }
 
 /**
- * Whether "Easy mode" (starter-fragment hints + glowing starter tiles) is on.
- * Defaults ON for brand-new players — the fragment→word idea is the hard part
- * to grok, so first-timers learn it with hints, then can turn them off. Players
- * who've already seen the intro default OFF (don't change the game under them).
+ * Distinct calendar days this browser has played. Drives a difficulty ramp:
+ * day 1 reveals answer words, days 2-3 show starter fragments, day 4+ no hints.
+ */
+interface Plays {
+  count: number;
+  lastDay: number;
+}
+function loadPlaysRaw(): Plays {
+  const raw = safeGet(PLAYS_KEY);
+  if (!raw) return { count: 0, lastDay: -99999 };
+  try {
+    return JSON.parse(raw) as Plays;
+  } catch {
+    return { count: 0, lastDay: -99999 };
+  }
+}
+export function loadPlays(): number {
+  return loadPlaysRaw().count;
+}
+/** Count today (once) toward the play tally and return the new total. Idempotent per day. */
+export function recordPlayDay(day: number): number {
+  const p = loadPlaysRaw();
+  if (p.lastDay === day) return p.count;
+  const next: Plays = { count: p.count + 1, lastDay: day };
+  safeSet(PLAYS_KEY, JSON.stringify(next));
+  return next.count;
+}
+
+/**
+ * Whether "Easy mode" (hints + glowing starter tiles) is on. The default ramps
+ * with experience: ON for a player's first few days (the fragment→word idea is
+ * the hard part to grok), OFF once they've played enough to find it routine.
+ * An explicit toggle always wins.
  */
 export function loadEasy(): boolean {
   const v = safeGet(EASY_KEY);
   if (v !== null) return v === "1";
-  return !introSeen();
+  return loadPlays() <= 3;
 }
 export function saveEasy(on: boolean): void {
   safeSet(EASY_KEY, on ? "1" : "0");

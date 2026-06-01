@@ -5,14 +5,15 @@ interface QuartileSlotsProps {
   found: FoundWord[];
   justFound: string | null; // word to animate
   /**
-   * Easy mode: starter fragments for the *unfound* Fourges, in order. Each
-   * empty slot shows the first fragment (e.g. "MO…") so newcomers can see where
-   * a word begins and hunt for the rest.
+   * Easy mode hints for the *unfound* Fourges, in order. Either starter
+   * fragments (e.g. "MO") or — on a player's first day — the full answer words.
    */
   hints?: string[];
+  /** True when `hints` are full answer words (render whole, no ellipsis). */
+  hintsAreWords?: boolean;
 }
 
-export default function QuartileSlots({ total, found, justFound, hints }: QuartileSlotsProps) {
+export default function QuartileSlots({ total, found, justFound, hints, hintsAreWords }: QuartileSlotsProps) {
   const quartileWords = found.filter((f) => f.isQuartile).map((f) => f.word);
   const slots = [];
   for (let i = 0; i < total; i++) {
@@ -28,7 +29,11 @@ export default function QuartileSlots({ total, found, justFound, hints }: Quarti
         {word ? (
           <span className="gem__word">{word}</span>
         ) : hint ? (
-          <span className="gem__hint">{hint.toUpperCase()}…</span>
+          hintsAreWords ? (
+            <span className="gem__hint-word">{hint}</span>
+          ) : (
+            <span className="gem__hint">{hint.toUpperCase()}…</span>
+          )
         ) : (
           <span className="gem__dot">◆</span>
         )}

@@ -18,6 +18,7 @@ import {
   saveEasy,
   tutorialDone,
   markTutorialDone,
+  recordPlayDay,
 } from "./lib/storage";
 import Grid from "./components/Grid";
 import WordTray from "./components/WordTray";
@@ -66,6 +67,9 @@ export default function App() {
   const [streak, setStreak] = useState(loadStreak().count);
   const [boardFlash, setBoardFlash] = useState(false);
   const [showIntro, setShowIntro] = useState(() => !introSeen());
+  // Distinct days played, counted once on mount. Drives the difficulty ramp;
+  // declared before `easy` so loadEasy()'s default sees today's count.
+  const [plays] = useState(() => recordPlayDay(dayNumber()));
   const [easy, setEasy] = useState(() => loadEasy());
   // Interactive "tap here" tutorial. null = inactive; 0-3 = which tile to tap
   // next; 4 = tap Enter. Walks a first-timer through building one real Fourge.
@@ -162,7 +166,14 @@ export default function App() {
     () => (easy ? new Set(unfoundHints.map((h) => h.starterIndex)) : undefined),
     [easy, unfoundHints],
   );
-  const slotHints = easy ? unfoundHints.map((h) => h.firstFragment) : undefined;
+  // Difficulty ramp: a player's very first day reveals the full answer words
+  // (just find the tiles); after that, easy mode shows only starter fragments.
+  const revealWords = easy && plays <= 1;
+  const slotHints = easy
+    ? revealWords
+      ? unfoundHints.map((h) => h.word)
+      : unfoundHints.map((h) => h.firstFragment)
+    : undefined;
 
   // ---- Interactive tutorial: the word we walk a newcomer through building ----
   const coachTarget = unfoundHints[0] ?? null;
@@ -411,7 +422,11 @@ export default function App() {
               <span className="intro__easy-text">
                 <strong>💡 Easy mode</strong>
                 <span className="intro__easy-sub">
-                  {easy ? "Glowing tiles show where each Fourge starts" : "No hints — full challenge"}
+                  {!easy
+                    ? "No hints — full challenge"
+                    : revealWords
+                      ? "Answer words shown — just find the tiles"
+                      : "Glowing tiles show where each Fourge starts"}
                 </span>
               </span>
               <span className={`easy-toggle__knob ${easy ? "easy-toggle__knob--on" : ""}`} aria-hidden />
@@ -462,6 +477,7 @@ export default function App() {
         found={state.found}
         justFound={justFoundQuartile}
         hints={slotHints}
+        hintsAreWords={revealWords}
       />
 
       {coaching ? (
@@ -509,7 +525,11 @@ export default function App() {
         <>
           <div className="easy-row">
             <span className="easy-row__text">
-              {easy ? "💡 Easy mode — starter hints on" : "Hints off — full challenge"}
+              {!easy
+                ? "Hints off — full challenge"
+                : revealWords
+                  ? "💡 Easy — answers shown to start you off"
+                  : "💡 Easy mode — starter hints on"}
             </span>
             <button
               type="button"
@@ -525,7 +545,11 @@ export default function App() {
           </div>
           {easy && !state.complete && (
             <p className="easy-hint-note">
-              <strong>Glowing tiles</strong> start a Fourge — tap one, then add 3 more.
+              {revealWords ? (
+                <>The <strong>answer words</strong> are shown above — find the tiles that spell each, starting from a glowing one.</>
+              ) : (
+                <><strong>Glowing tiles</strong> start a Fourge — tap one, then add 3 more.</>
+              )}
             </p>
           )}
         </>
